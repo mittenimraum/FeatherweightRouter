@@ -20,22 +20,22 @@ public struct Router<ViewController, Path> {
     /**
      Presenter to pass route actions too
      */
-    public var presenter: Presenter<ViewController>
+    public var presenter: Presenter<ViewController>?
 
     /**
      The presenter to return if this route matches
      */
-    public var presentable: ViewController { return presenter.presentable }
+    public var presentable: ViewController? { return presenter?.presentable }
 
     /**
      Determines if this Router handles the passed in String
      */
-    public var handlesRoute: (Path) -> Bool = { _ in false }
+    public var handlesRoute: ((Path) -> Bool)? = { _ in false }
 
     /**
      Passes actions to the Presenter to update the view to the provided String
      */
-    public var setRoute: (Path) -> Bool = { _ in false }
+    public var setRoute: ((Path) -> Bool)? = { _ in false }
 
     /**
      Returns an array presenters (T) that match the passed in String. The actual array returned can
@@ -43,8 +43,10 @@ public struct Router<ViewController, Path> {
      array of all immediate ancestors, weather they match or now, whereas a Stack Router traverses
      nested children to find a match and returns the matched ancestor tree.
      */
-    public var getStack: (Path) -> [ViewController]? = { _ in nil }
-
+    public var getStack: ((Path) -> [ViewController]?)? = { _ in nil }
+    
+    public var dispose: (() -> Void)?
+    
     /**
      Primary Router initialiser
 
@@ -62,17 +64,8 @@ public struct Router<ViewController, Path> {
           getStack: ((Path) -> [ViewController]?)? = nil) {
 
         self.presenter = presenter
-
-        if let handlesRoute = handlesRoute {
-            self.handlesRoute = handlesRoute
-        }
-
-        if let setRoute = setRoute {
-            self.setRoute = setRoute
-        }
-
-        if let getStack = getStack {
-            self.getStack = getStack
-        }
+        self.handlesRoute = handlesRoute
+        self.setRoute = setRoute
+        self.getStack = getStack
     }
 }

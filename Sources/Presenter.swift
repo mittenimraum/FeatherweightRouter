@@ -12,18 +12,19 @@
 public struct Presenter<ViewController> {
 
     /// Returns the child presenter
-    public var getPresentable: () -> ViewController
+    public var getPresentable: (() -> ViewController?)?
 
     /// Sets the child value to the passed in presenter
-    public var setChild: (ViewController) -> Void = { _ in
-        fatalError("Call to unset setChild") }
-
+    public var setChild: ((ViewController) -> Void)?
+    
     /// Sets the children value to passed in presenters
-    public var setChildren: ([ViewController]) -> Void = { _ in
-        fatalError("Call to unset setChildren") }
+    public var setChildren: (([ViewController]) -> Void)?
 
     /// The owned presenter
-    public var presentable: ViewController { return getPresentable() }
+    public var presentable: ViewController? { return getPresentable?() }
+    
+    /// Dispose
+    public var dispose: (() -> Void)?
 
     /**
      Shorthand for the setChild function
@@ -31,6 +32,9 @@ public struct Presenter<ViewController> {
      - parameter child: child presenter
      */
     public func set(_ child: ViewController) {
+        guard let setChild = setChild else {
+            return
+        }
         setChild(child)
     }
 
@@ -40,6 +44,9 @@ public struct Presenter<ViewController> {
      - parameter children: presenter children
      */
     public func set(_ children: [ViewController]) {
+        guard let setChildren = setChildren else {
+            return
+        }
         setChildren(children)
     }
 
@@ -50,15 +57,13 @@ public struct Presenter<ViewController> {
      - parameter setChild:       Callback action to set the child presenter
      - parameter setChildren:    Callback to set the children presenters
      */
-    public init(getPresentable: @escaping (Void) -> ViewController,
+    public init(getPresentable: @escaping () -> ViewController?,
                 setChild: ((ViewController) -> Void)? = nil,
-                setChildren: (([ViewController]) -> Void)? = nil) {
+                setChildren: (([ViewController]) -> Void)? = nil,
+                dispose: (() -> Void)? = nil) {
         self.getPresentable = getPresentable
-        if let setChild = setChild {
-            self.setChild = setChild
-        }
-        if let setChildren = setChildren {
-            self.setChildren = setChildren
-        }
+        self.setChild = setChild
+        self.setChildren = setChildren
+        self.dispose = dispose
     }
 }

@@ -18,14 +18,24 @@ extension Router {
         var router = self
 
         router.handlesRoute = { path in
-            return stack.contains { $0.handlesRoute(path) }
+            return stack.contains { $0.handlesRoute?(path) ?? false }
         }
 
         router.setRoute = { path in
-            router.presenter.set(stack.pickFirst { $0.getStack(path) } ?? [])
+            router.presenter?.set(stack.pickFirst { $0.getStack?(path) } ?? [])
+            
             return true
         }
-
+        router.dispose = {
+            stack.forEach { $0.dispose?() }
+            
+            router.presenter?.dispose?()
+            router.presenter = nil
+            router.handlesRoute = nil
+            router.getStack = nil
+            router.setRoute = nil
+            router.dispose = nil
+        }
         return router
     }
 }

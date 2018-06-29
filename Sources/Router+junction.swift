@@ -19,23 +19,33 @@ extension Router {
             var router = self
 
             router.handlesRoute = { path in
-                return junctions.contains { $0.handlesRoute(path) }
+                return junctions.contains { $0.handlesRoute?(path) ?? false }
             }
-
             router.setRoute = { path in
                 // inform the junction presenter of the available children
-                router.presenter.set(junctions.map { $0.presentable })
+                router.presenter?.set(junctions.compactMap { $0.presentable })
 
-                if let junction = junctions.pickFirst({ $0.handlesRoute(path) ? $0 : nil }) {
+                if let junction = junctions.pickFirst({ $0.handlesRoute?(path) == true ? $0 : nil }) {
                     // if a child matches, pass the path to it
-                    _ = junction.setRoute(path)
+                    _ = junction.setRoute?(path)
                     // and set it as the active junction
-                    router.presenter.set(junction.presentable)
+                    if let presentable = junction.presentable {
+                        router.presenter?.set(presentable)
+                    }
                     return true
                 }
                 return false
             }
-
+            router.dispose = {
+                junctions.forEach { $0.dispose?() }
+                
+                router.presenter?.dispose?()
+                router.presenter = nil
+                router.handlesRoute = nil
+                router.getStack = nil
+                router.setRoute = nil
+                router.dispose = nil
+            }
             return router
     }
 }
